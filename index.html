@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>สุ่มแอนิเมชัน + อัปโหลดรูป</title>
+  <title>มาลอยกระทงกันเถอะ</title>
   <style>
     :root{
   --dur: 900ms;
@@ -27,7 +27,7 @@
     p{ margin:.25rem 0 1rem; color:#94a3b8 }
     .stage{
       height:240px; display:flex; align-items: flex-end; justify-content: flex-start; gap: 40px; border:1px dashed #374151; border-radius:14px;
-      background: #000 url("C:/Project/Loygratong/Untitled.png") center / cover no-repeat;
+      background: #000 url("./Untitled.png") center / cover no-repeat;
       margin: 16px 0 12px; position: relative; overflow: hidden;
     }
 
@@ -120,8 +120,8 @@
 </head>
 <body>
   <div class="card">
-    <h1>สุ่มแอนิเมชัน</h1>
-    <p>อัปโหลดรูปเพื่อเอามาแทนกล่อง แล้วกด “สุ่มแอนิเมชัน” เพื่อเล่นเอฟเฟกต์กับรูป</p>
+    <h1>ลอยกระทง</h1>
+    <p>อัปโหลดรูปเพื่อเอามาแทนกล่องแล้วมาลอยกระทงกันเถอะ(งานรีบ)/p>
 
     <div class="stage" id="stage">
       <div id="box1" class="box">
@@ -140,7 +140,7 @@
 
     <div class="row">
       <input id="file1" type="file" accept="image/*" />
-      <button id="btn">สุ่มแอนิเมชัน 🎲</button>
+      <button id="btn">ลอยกระทง</button>
       <button id="clear" class="muted">ล้างรูป</button>
     </div>
 
@@ -157,7 +157,7 @@
 
 <script>
   // ===== ตั้งรูปให้ box2 จาก path ที่มีอยู่แล้ว =====
-  const BOX2_IMAGE_PATH = "C:/Project/Loygratong/pngtree-loy-krathong-fesival-png-image_2367780.jpg"; // เปลี่ยนเป็นของคุณ
+  const BOX2_IMAGE_PATH = "./pngtree-loy-krathong-fesival-png-image_2367780.jpg"; // เปลี่ยนเป็นของคุณ
 
   const box1 = document.getElementById("box1");
   const box2 = document.getElementById("box2");
