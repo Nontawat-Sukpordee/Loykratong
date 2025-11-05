@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>สุ่มแอนิเมชัน + อัปโหลดรูป</title>
+  <style>
+    :root{
+  --dur: 900ms;
+  --e: cubic-bezier(.2,.8,.2,1);
+  --dx: 200px;        /* ระยะพุ่งทั่วไป */
+  --dx-far: 500px;    /* ระยะพุ่งไกลมาก */
+  --rise: 250px;      /* ระยะลอยขึ้น (บวก แล้วคูณ -1 ตอนใช้) */
+  --sink: 140px;      /* ระยะจมลง */
+  --back: 180px;      /* ระยะพุ่งถอยหลัง */
+}
+
+    body{
+      font-family: system-ui, sans-serif; display:grid; place-items:center; min-height:100dvh;
+      background:#0f172a; color:#e2e8f0; margin:0; padding:24px;
+    }
+    .card{
+      width:min(560px, 92vw); background:#111827; border:1px solid #1f2937; border-radius:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35); padding:24px 20px;
+    }
+    h1{ font-size:1.25rem; margin:0 0 10px; }
+    p{ margin:.25rem 0 1rem; color:#94a3b8 }
+    .stage{
+      height:240px; display:flex; align-items: flex-end; justify-content: flex-start; gap: 40px; border:1px dashed #374151; border-radius:14px;
+      background: #000 url("C:/Project/Loygratong/Untitled.png") center / cover no-repeat;
+      margin: 16px 0 12px; position: relative; overflow: hidden;
+    }
+
+    /* กล่อง + รูป */
+    .box{
+      width:60px; height: 60px; border-radius:20px; margin-bottom: 40px; background: linear-gradient(135deg,#22d3ee,#6366f1);
+      box-shadow: 0 10px 18px rgba(0,0,0,.35);
+      display:grid; place-items:center; font-weight:700; letter-spacing:.5px; color:#0b1020;
+      overflow: hidden;
+    }
+    .box.has-image{ background:#000; }
+    .box img{ width:100%; height:100%; object-fit:cover; display:none; }
+    .box.has-image img{ display:block; }
+
+
+    .row{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:8px; flex-wrap:wrap; }
+    button{
+      border:none; padding:10px 14px; border-radius:12px; background:#22d3ee; color:#0b1020; font-weight:700;
+      cursor:pointer; transition: transform .08s ease, opacity .2s ease; 
+    }
+    button:active{ transform: translateY(1px) scale(.98); }
+    .muted{ opacity:.8; background:#334155; color:#cbd5e1 }
+    .hint{ font-size:.85rem; opacity:.7 }
+
+    /* ====== Animations ====== */
+    :root { --dur: 900ms; --e: cubic-bezier(.2,.8,.2,1); --dx: 100px; }
+
+    /* เด้งแล้วค้างตำแหน่งปลายทาง */
+    .anim-bounce { animation: bounce var(--dur) var(--e) forwards; }
+    @keyframes bounce{
+    0%   { transform: translateX(0) }
+    20%  { transform: translateX(calc(var(--dx)*.60)) translateY(-22px) }
+    45%  { transform: translateX(calc(var(--dx)*.80)) translateY(0) }
+    65%  { transform: translateX(calc(var(--dx)*.90)) translateY(-10px) }
+    80%  { transform: translateX(calc(var(--dx)*.96)) translateY(0) }
+    100% { transform: translateX(var(--dx)) }
+    }
+
+    /* เลื่อนไปขวาแล้วค้าง */
+    .anim-slide { animation: slide var(--dur) var(--e) forwards; }
+    @keyframes slide{
+    from { transform: translateX(10) }
+    to   { transform: translateX(var(--dx)) }
+    }
+
+/* ท่า1: พุ่งไปหน่อยนึงแล้วหมุน */
+.anim-move-spin { animation: move-spin var(--dur) var(--e) forwards; }
+@keyframes move-spin{
+  0%   { transform: translateX(0) rotate(0deg); }
+  40%  { transform: translateX(calc(var(--dx) * .35)) rotate(0deg); }
+  100% { transform: translateX(calc(var(--dx) * .5)) rotate(90000deg); }
+}
+
+/* ท่า2: พุ่งออกไปไกลมาก */
+.anim-boost { animation: boost var(--dur) var(--e) forwards; }
+@keyframes boost{
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--dx-far)); }
+}
+
+/* ท่า3: ลอยขึ้นไปเลย */
+.anim-fly { animation: fly var(--dur) var(--e) forwards; }
+@keyframes fly{
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(-1 * var(--rise))); }
+}
+
+/* ท่า4: จมไปเลย */
+.anim-sink { animation: sink var(--dur) var(--e) forwards; }
+@keyframes sink{
+  from { transform: translateY(0); }
+  to   { transform: translateY(var(--sink)); }
+}
+
+/* ท่า5: พุ่งกลับหลัง */
+.anim-backdash { animation: backdash var(--dur) var(--e) forwards; }
+@keyframes backdash{
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-1 * var(--back))); }
+}
+
+    /* ลาก-วางไฟล์ */
+    .stage.dragging{ border-color:#38bdf8; background: linear-gradient(to bottom, rgba(56,189,248,.08), transparent 35%); }
+    .drop-hint{
+      position:absolute; inset:0; display:none; place-items:center; text-align:center; padding:10px;
+      color:#bae6fd; pointer-events:none;
+    }
+    .stage.dragging .drop-hint{ display:grid; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>สุ่มแอนิเมชัน</h1>
+    <p>อัปโหลดรูปเพื่อเอามาแทนกล่อง แล้วกด “สุ่มแอนิเมชัน” เพื่อเล่นเอฟเฟกต์กับรูป</p>
+
+    <div class="stage" id="stage">
+      <div id="box1" class="box">
+        <span>BOX 1</span>
+        <img alt="uploaded preview 1" />
+      </div>
+
+      <div id="box2" class="box">
+        <span>BOX 2</span>
+        <img alt="uploaded preview 2" />
+      </div>
+
+      <div class="drop-hint">ปล่อยรูปที่นี่เพื่ออัปโหลด</div>
+    </div>
+
+
+    <div class="row">
+      <input id="file1" type="file" accept="image/*" />
+      <button id="btn">สุ่มแอนิเมชัน 🎲</button>
+      <button id="clear" class="muted">ล้างรูป</button>
+    </div>
+
+    <div class="row" style="margin-top:6px">
+      <div class="hint">ลาก-วางไฟล์ก็ได้ • รองรับ GIF/PNG/JPG/WebP</div>
+      <div class="hint">ระยะเวลา: <code id="durLabel">900ms</code></div>
+    </div>
+
+    <div class="row" style="margin-top:6px">
+      <input id="dur" type="range" min="400" max="2000" step="50" value="900" />
+      <small class="hint">ปรับแล้วจะมีผลครั้งถัดไป</small>
+    </div>
+  </div>
+
+<script>
+  // ===== ตั้งรูปให้ box2 จาก path ที่มีอยู่แล้ว =====
+  const BOX2_IMAGE_PATH = "C:/Project/Loygratong/pngtree-loy-krathong-fesival-png-image_2367780.jpg"; // เปลี่ยนเป็นของคุณ
+
+  const box1 = document.getElementById("box1");
+  const box2 = document.getElementById("box2");
+  const img1 = box1.querySelector("img");
+  const img2 = box2.querySelector("img");
+  const ph1  = box1.querySelector("span");
+  const ph2  = box2.querySelector("span");
+
+  // รองรับทั้ง id="file1" และ id="file" (เผื่อคุณใช้ชื่อเดิม)
+  const fileInput1 = document.getElementById("file1") || document.getElementById("file");
+
+  // --- อัปโหลดรูปให้ Block 1 ---
+  function loadFileToBox1(file){
+    if(!file) return;
+    const url = URL.createObjectURL(file);
+    img1.onload = () => URL.revokeObjectURL(url); // cleanup
+    img1.src = url;
+    box1.classList.add("has-image");
+    ph1.style.display = "none";
+  }
+
+  fileInput1?.addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    loadFileToBox1(f);
+  });
+
+  // --- ตั้งรูปให้ Block 2 จาก path ---
+  function initBox2(){
+    img2.src = BOX2_IMAGE_PATH;
+    box2.classList.add("has-image");
+    ph2.style.display = "none";
+  }
+  window.addEventListener("DOMContentLoaded", initBox2);
+
+  // (ไม่เกี่ยวกับอัปโหลด) ตัวอย่างสุ่มอิสระแต่ละกล่อง
+  const animationsBox1 = ["anim-slide"];
+  const animationsBox2 = ["anim-move-spin","anim-boost","anim-fly","anim-sink","anim-backdash"];
+  const allAnimations  = [...new Set([...animationsBox1, ...animationsBox2])];
+
+  const btn       = document.getElementById("btn");
+  const durSlider = document.getElementById("dur");
+  const durLabel  = document.getElementById("durLabel");
+
+  function pick(pool){ return pool[Math.floor(Math.random()*pool.length)]; }
+
+  function playRandom(){
+    const dur = Number(durSlider?.value || 900);
+    document.documentElement.style.setProperty('--dur', dur + 'ms');
+    if(durLabel) durLabel.textContent = dur + 'ms';
+
+    // กล่อง 1
+    box1.classList.remove(...allAnimations);
+    void box1.offsetWidth;
+    box1.classList.add(pick(animationsBox1));
+
+    // กล่อง 2
+    box2.classList.remove(...allAnimations);
+    void box2.offsetWidth;
+    box2.classList.add(pick(animationsBox2));
+  }
+
+  btn?.addEventListener("click", playRandom);
+</script>
+
+
+
+</body>
+</html>
